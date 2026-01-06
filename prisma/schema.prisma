@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProgramType {
+  SBA_7A
+  SBA_504
+  OTHER
+}
+
+enum DealStatus {
+  DRAFT
+  READY
+  ANALYZING
+  ANALYZED
+}
+
+enum DocumentType {
+  BORROWER_INTAKE_SUMMARY
+  PERSONAL_FINANCIAL_STATEMENT
+  BUSINESS_FINANCIAL_STATEMENTS
+  BUSINESS_TAX_RETURNS
+  PERSONAL_TAX_RETURNS
+  BUSINESS_DEBT_SCHEDULE
+  AR_AP_AGING
+  BANK_STATEMENTS
+  BUSINESS_PLAN_EXEC_SUMMARY
+  COLLATERAL_UCC_INSURANCE
+  ENTITY_LEGAL_DOCS
+  PROJECT_COSTS_QUOTES
+  OTHER
+}
+
+enum ParseStatus {
+  PENDING
+  PARSING
+  PARSED
+  ERROR
+}
+
+enum AnalysisStatus {
+  QUEUED
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+model Deal {
+  id              String      @id @default(uuid())
+  name            String
+  borrowerName    String
+  programType     ProgramType @default(SBA_7A)
+  requestedAmount Decimal     @db.Decimal(15, 2)
+  status          DealStatus  @default(DRAFT)
+  notes           String?     @db.Text
+  
+  documents       Document[]
+  analysisRuns    AnalysisRun[]
+  activities      Activity[]
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Document {
+  id            String       @id @default(uuid())
+  dealId        String
+  deal          Deal         @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  
+  docType       DocumentType
+  fileName      String
+  originalName  String
+  mimeType      String       @default("application/pdf")
+  fileSize      Int          // in bytes
+  storagePath   String       // local path or blob URL
+  
+  parseStatus   ParseStatus  @default(PENDING)
+  parsedText    String?      @db.Text
+  parseError    String?
+  
+  chunks        DocumentChunk[]
+  
+  uploadedAt    DateTime     @default(now())
+  parsedAt      DateTime?
+  
+  @@index([dealId])
+  @@index([docType])
+}
+
+model DocumentChunk {
+  id          String   @id @default(uuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  chunkIndex  Int
+  text        String   @db.Text
+  pageHint    Int?     // page number if available
+  
+  @@index([documentId])
+  @@unique([documentId, chunkIndex])
+}
+
+model AnalysisRun {
+  id           String         @id @default(uuid())
+  dealId       String
+  deal         Deal           @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  
+  status       AnalysisStatus @default(QUEUED)
+  modelName    String         @default("gpt-4o")
+  
+  // Analysis output stored as JSON
+  outputJson   Json?
+  
+  // Metadata
+  tokensUsed   Int?
+  errorMessage String?        @db.Text
+  
+  startedAt    DateTime       @default(now())
+  finishedAt   DateTime?
+  
+  @@index([dealId])
+  @@index([status])
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  dealId    String
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  
+  type      String   // e.g., "DEAL_CREATED", "DOCUMENT_UPLOADED", "ANALYSIS_STARTED", etc.
+  message   String
+  metadata  Json?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([dealId])
+  @@index([createdAt])
+}
+
