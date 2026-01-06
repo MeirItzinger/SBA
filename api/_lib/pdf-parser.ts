@@ -18,23 +18,39 @@ export async function parsePDFFromPath(filePath: string): Promise<ParsedPDF> {
   return parsePDFFromBuffer(buffer);
 }
 
-export async function parsePDFFromBuffer(buffer: Buffer): Promise<ParsedPDF> {
-  const data = await pdfParse(buffer, {
-    // Options for pdf-parse
-    max: 0, // Parse all pages
-  });
+export async function parsePDFFromBuffer(buffer: Buffer): Promise<ParsedPDF> {  
+  try {
+    const data = await pdfParse(buffer, {
+      // Options for pdf-parse
+      max: 0, // Parse all pages
+    });
 
-  const fullText = data.text || '';
-  const numPages = data.numpages || 1;
+    const fullText = data.text || '';
+    const numPages = data.numpages || 1;
 
-  // Split text into chunks
-  const chunks = splitIntoChunks(fullText, numPages, CHUNK_SIZE);
+    // Split text into chunks
+    const chunks = splitIntoChunks(fullText, numPages, CHUNK_SIZE);
 
-  return {
-    text: fullText,
-    numPages,
-    chunks,
-  };
+    return {
+      text: fullText,
+      numPages,
+      chunks,
+    };
+  } catch (error) {
+    // Handle corrupted or problematic PDFs gracefully
+    console.error('PDF parsing error:', error);
+    
+    // Return a placeholder result so the document can still be used
+    return {
+      text: '[PDF could not be parsed - file may be corrupted, scanned, or password-protected]',
+      numPages: 1,
+      chunks: [{
+        chunkIndex: 0,
+        text: '[PDF could not be parsed - file may be corrupted, scanned, or password-protected. Please try re-uploading or use a different file.]',
+        pageHint: 1,
+      }],
+    };
+  }
 }
 
 function splitIntoChunks(
