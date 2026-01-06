@@ -14,7 +14,6 @@ import {
   ChevronDown,
   ChevronRight,
   FileText,
-  ExternalLink,
 } from 'lucide-react'
 import { cn, getRecommendationColor, getSeverityColor, formatDateTime } from '../lib/utils'
 import { useToast } from './Toast'

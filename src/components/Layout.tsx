@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { FileText, BarChart3, Settings } from 'lucide-react'
+import { FileText, BarChart3 } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 interface LayoutProps {

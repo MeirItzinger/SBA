@@ -15,7 +15,7 @@ import {
 import DocumentCenter from '../components/DocumentCenter'
 import AnalysisPanel from '../components/AnalysisPanel'
 import Timeline from '../components/Timeline'
-import { Skeleton, AnalysisSkeleton, DocumentCardSkeleton } from '../components/Skeleton'
+import { Skeleton, DocumentCardSkeleton } from '../components/Skeleton'
 import { useToast } from '../components/Toast'
 import { getDeal, deleteDeal } from '../lib/api'
 import { cn, formatCurrency, formatDate, getStatusColor, getStatusLabel } from '../lib/utils'

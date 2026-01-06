@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, Filter, RefreshCw, Briefcase } from 'lucide-react'
+import { Plus, Search, RefreshCw, Briefcase } from 'lucide-react'
 import DealCard from '../components/DealCard'
 import CreateDealModal from '../components/CreateDealModal'
 import { DealCardSkeleton } from '../components/Skeleton'

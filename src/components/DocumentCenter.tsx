@@ -1,11 +1,10 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Upload,
   FileText,
   Check,
-  AlertCircle,
   Loader2,
   Trash2,
   Eye,
@@ -152,7 +151,6 @@ export default function DocumentCenter({ dealId, documents, onDocumentsChange }:
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {DOCUMENT_TYPES.map(docType => {
           const uploaded = documents.filter(d => d.docType === docType.type)
-          const hasDoc = uploaded.length > 0
 
           return (
             <DocumentTypeCard
