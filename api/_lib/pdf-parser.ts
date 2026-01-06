@@ -35,8 +35,11 @@ export async function parsePDFFromBuffer(buffer: Buffer): Promise<ParsedPDF> {
   console.log('Parsing PDF with unpdf, buffer size:', buffer.length, 'bytes');
 
   try {
+    // Convert Buffer to Uint8Array for unpdf
+    const uint8Array = new Uint8Array(buffer);
+    
     // Use unpdf to extract text
-    const { text, totalPages } = await extractText(buffer, { mergePages: true });
+    const { text, totalPages } = await extractText(uint8Array, { mergePages: true });
     
     const fullText = typeof text === 'string' ? text : (text as string[]).join('\n\n');
     const numPages = totalPages || 1;
