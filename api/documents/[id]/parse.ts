@@ -48,11 +48,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Check if it's a local file or blob URL
       if (document.storagePath.startsWith('http')) {
         // Fetch from blob storage
+        console.log('Fetching PDF from blob:', document.storagePath);
         const response = await fetch(document.storagePath);
-        const buffer = Buffer.from(await response.arrayBuffer());
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch PDF from storage: ${response.status} ${response.statusText}`);
+        }
+        
+        const arrayBuffer = await response.arrayBuffer();
+        console.log('Fetched PDF, size:', arrayBuffer.byteLength, 'bytes');
+        
+        const buffer = Buffer.from(arrayBuffer);
         parsedData = await parsePDFFromBuffer(buffer);
       } else {
         // Read from local filesystem
+        console.log('Reading PDF from local path:', document.storagePath);
         parsedData = await parsePDFFromPath(document.storagePath);
       }
 

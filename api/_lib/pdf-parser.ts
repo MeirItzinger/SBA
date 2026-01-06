@@ -19,6 +19,21 @@ export async function parsePDFFromPath(filePath: string): Promise<ParsedPDF> {
 }
 
 export async function parsePDFFromBuffer(buffer: Buffer): Promise<ParsedPDF> {  
+  // Validate buffer
+  if (!buffer || buffer.length === 0) {
+    console.error('PDF parsing error: Empty buffer received');
+    throw new Error('Empty or invalid PDF file');
+  }
+
+  // Check PDF magic bytes
+  const header = buffer.slice(0, 5).toString();
+  if (!header.startsWith('%PDF')) {
+    console.error('PDF parsing error: Invalid PDF header:', header);
+    throw new Error('File is not a valid PDF');
+  }
+
+  console.log('Parsing PDF, buffer size:', buffer.length, 'bytes');
+
   try {
     const data = await pdfParse(buffer, {
       // Options for pdf-parse
@@ -27,6 +42,8 @@ export async function parsePDFFromBuffer(buffer: Buffer): Promise<ParsedPDF> {
 
     const fullText = data.text || '';
     const numPages = data.numpages || 1;
+
+    console.log('PDF parsed successfully:', numPages, 'pages,', fullText.length, 'chars');
 
     // Split text into chunks
     const chunks = splitIntoChunks(fullText, numPages, CHUNK_SIZE);
@@ -37,19 +54,11 @@ export async function parsePDFFromBuffer(buffer: Buffer): Promise<ParsedPDF> {
       chunks,
     };
   } catch (error) {
-    // Handle corrupted or problematic PDFs gracefully
-    console.error('PDF parsing error:', error);
+    // Log the actual error for debugging
+    console.error('PDF parsing error:', error instanceof Error ? error.message : error);
     
-    // Return a placeholder result so the document can still be used
-    return {
-      text: '[PDF could not be parsed - file may be corrupted, scanned, or password-protected]',
-      numPages: 1,
-      chunks: [{
-        chunkIndex: 0,
-        text: '[PDF could not be parsed - file may be corrupted, scanned, or password-protected. Please try re-uploading or use a different file.]',
-        pageHint: 1,
-      }],
-    };
+    // Re-throw with more context
+    throw new Error(`PDF parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
