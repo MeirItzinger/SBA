@@ -1,4 +1,4 @@
-import pdfParse from 'pdf-parse';
+import { extractText } from 'unpdf';
 import fs from 'fs/promises';
 
 export interface ParsedPDF {
@@ -18,7 +18,7 @@ export async function parsePDFFromPath(filePath: string): Promise<ParsedPDF> {
   return parsePDFFromBuffer(buffer);
 }
 
-export async function parsePDFFromBuffer(buffer: Buffer): Promise<ParsedPDF> {  
+export async function parsePDFFromBuffer(buffer: Buffer): Promise<ParsedPDF> {
   // Validate buffer
   if (!buffer || buffer.length === 0) {
     console.error('PDF parsing error: Empty buffer received');
@@ -32,16 +32,14 @@ export async function parsePDFFromBuffer(buffer: Buffer): Promise<ParsedPDF> {
     throw new Error('File is not a valid PDF');
   }
 
-  console.log('Parsing PDF, buffer size:', buffer.length, 'bytes');
+  console.log('Parsing PDF with unpdf, buffer size:', buffer.length, 'bytes');
 
   try {
-    const data = await pdfParse(buffer, {
-      // Options for pdf-parse
-      max: 0, // Parse all pages
-    });
-
-    const fullText = data.text || '';
-    const numPages = data.numpages || 1;
+    // Use unpdf to extract text
+    const { text, totalPages } = await extractText(buffer, { mergePages: true });
+    
+    const fullText = typeof text === 'string' ? text : (text as string[]).join('\n\n');
+    const numPages = totalPages || 1;
 
     console.log('PDF parsed successfully:', numPages, 'pages,', fullText.length, 'chars');
 
@@ -68,7 +66,7 @@ function splitIntoChunks(
   chunkSize: number
 ): Array<{ chunkIndex: number; text: string; pageHint?: number }> {
   const chunks: Array<{ chunkIndex: number; text: string; pageHint?: number }> = [];
-  
+
   // Clean up text - normalize whitespace
   const cleanText = text
     .replace(/\r\n/g, '\n')
@@ -85,10 +83,10 @@ function splitIntoChunks(
 
   // Split into paragraphs first
   const paragraphs = cleanText.split(/\n\n+/);
-  
+
   let currentChunk = '';
   let chunkIndex = 0;
-  
+
   for (const paragraph of paragraphs) {
     const trimmedParagraph = paragraph.trim();
     if (!trimmedParagraph) continue;
@@ -137,4 +135,3 @@ export function truncateText(text: string, maxLength: number = 1000): string {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
 }
-
