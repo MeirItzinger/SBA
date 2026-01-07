@@ -227,8 +227,10 @@
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 50;
-  width: 100%;
+  width: calc(100% - 2rem);
   max-width: 32rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
   animation: modalZoomIn 200ms ease-out;
 }
 
